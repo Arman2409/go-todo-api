@@ -1,0 +1,15 @@
+datasource db {
+    provider = "postgresql"
+    url      = env("DATABASE_URL")
+}
+
+generator db {
+    provider = "go run github.com/steebchen/prisma-client-go"
+}
+
+model Todo {
+    id          String  @id @default(uuid())
+    title       String
+    description String?
+    completed   Boolean @default(false)
+}
