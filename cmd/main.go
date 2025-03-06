@@ -26,6 +26,8 @@ func main() {
     router.GET("/todos", todoHandler.GetTodos)
     router.POST("/todo", todoHandler.CreateTodo)
     router.PATCH("/todo/:id", todoHandler.UpdateTodo)
+    router.PATCH("/todo/:id/done",todoHandler.MarkDone)
+    router.DELETE("/todo/:id",todoHandler.Delete)
 
     router.Run(":8080")
 }
