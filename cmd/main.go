@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"todo/handlers"
+	"todo/controllers"
 	"todo/prisma/db"
 )
 
@@ -14,20 +14,16 @@ func main() {
 
     prismaClient := db.NewClient();
 
+    defer prismaClient.Prisma.Disconnect() 
+
     err := prismaClient.Prisma.Connect()
     if err != nil {
         log.Fatalf("Failed to connect to the database: %v", err)
     }
     
-    defer prismaClient.Prisma.Disconnect() 
-    
-    todoHandler := handlers.TodoHandler{Prisma: prismaClient}
+    todoController := controllers.NewTodoController(prismaClient)
 
-    router.GET("/todos", todoHandler.GetTodos)
-    router.POST("/todo", todoHandler.CreateTodo)
-    router.PATCH("/todo/:id", todoHandler.UpdateTodo)
-    router.PATCH("/todo/:id/done",todoHandler.MarkDone)
-    router.DELETE("/todo/:id",todoHandler.Delete)
+    todoController.SetupRoutes(router);
 
     router.Run(":8080")
 }
