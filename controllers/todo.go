@@ -24,7 +24,7 @@ func (tc *TodoController) SetupRoutes(r *gin.Engine) {
     {
         todosGroup.GET("", tc.TodoHandler.GetTodos)
         todosGroup.POST("", tc.TodoHandler.CreateTodo)
-        todosGroup.PUT("/:id", tc.TodoHandler.UpdateTodo)
+        todosGroup.PATCH("/:id", tc.TodoHandler.UpdateTodo)
         todosGroup.PATCH("/:id/done", tc.TodoHandler.MarkDone)
         todosGroup.DELETE("/:id", tc.TodoHandler.Delete)
     }

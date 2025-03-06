@@ -1,6 +1,7 @@
 package todo_handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,6 +9,10 @@ import (
 
 	"todo/prisma/db"
 	logger "todo/tools"
+)
+
+const (
+	MarkingDoneError    = "Error marking todo as done"
 )
 
 func (h *TodoHandler) MarkDone(c *gin.Context) {
@@ -20,15 +25,20 @@ func (h *TodoHandler) MarkDone(c *gin.Context) {
 	).Exec(c)
 
 	if err != nil {
-		logger.Logger.Error(fmt.Sprintf("Error marking todo as done: %v\n", err))
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Logger.Error(fmt.Sprintf(RecordNotFoundForUpdateError + ": %v\n", err))
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error marking todo as done"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": RecordNotFoundForUpdateError})
+			return;
+		}
+
+		logger.Logger.Error(fmt.Sprintf(MarkingDoneError + ": %v\n", err))
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": MarkingDoneError})
 		return
 	}
 
-	todoString := fmt.Sprintf("%+v", todo);
-
-	logger.Logger.Info("Marked done record: " +  todoString);
+	logger.LogWithObject("Marked done record", todo)
 
 	c.Status(http.StatusOK)
 }

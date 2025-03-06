@@ -11,6 +11,9 @@ import (
 	logger "todo/tools"
 )
 
+const (
+	RecordCreationError = "Error creating todo"
+)
 
 func (h *TodoHandler) CreateTodo(c *gin.Context) {
 
@@ -26,14 +29,12 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 	).Exec(c)
 
 	if err != nil {
-		logger.Logger.Error(fmt.Sprintf("Error creating todo: %v\n", err))
+		logger.Logger.Error(fmt.Sprintf(RecordCreationError + ": %v\n", err))
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating todo"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": RecordCreationError})
 	}
 
-	todoString := fmt.Sprintf("%+v", todo)
-	
-	logger.Logger.Info("Created record: " +  todoString);
+	logger.LogWithObject("Created record", todo);
 
 	c.JSON(http.StatusCreated, todo)
 }

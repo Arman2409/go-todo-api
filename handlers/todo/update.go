@@ -1,6 +1,7 @@
 package todo_handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -9,6 +10,10 @@ import (
 	"todo/models"
 	"todo/prisma/db"
 	logger "todo/tools"
+)
+
+const (
+	FailedToUpdateError = "Failed to update the record"
 )
 
 func (h *TodoHandler) UpdateTodo(c *gin.Context) {
@@ -23,16 +28,17 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 
 	updateArgs := []db.TodoSetParam{}
 
-	if requestBody.Title != "" { 
+	if requestBody.Title != "" {
 		updateArgs = append(updateArgs, db.Todo.Title.Set(requestBody.Title))
 	}
 
-	if requestBody.Description != "" { 
+	if requestBody.Description != "" {
 		updateArgs = append(updateArgs, db.Todo.Description.Set(requestBody.Description))
 	}
 
 	if len(updateArgs) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "No fields to update"})
+
 		return
 	}
 
@@ -43,13 +49,18 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 	).Exec(c)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Logger.Error(fmt.Sprintf(RecordNotFoundForUpdateError+": %v\n", err))
+
+			c.JSON(http.StatusBadRequest, gin.H{"error": RecordNotFoundForUpdateError})
+			return
+		}
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": FailedToUpdateError})
 		return
 	}
 
-	todoString := fmt.Sprintf("%+v", todo);
+	logger.LogWithObject("Updated record", todo)
 
-	logger.Logger.Info("Updated record: " +  todoString);
-
-	c.JSON(http.StatusOK, todo);
+	c.JSON(http.StatusOK, todo)
 }

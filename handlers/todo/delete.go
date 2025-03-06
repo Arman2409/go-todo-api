@@ -1,6 +1,7 @@
 package todo_handler
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -8,6 +9,11 @@ import (
 
 	"todo/prisma/db"
 	logger "todo/tools"
+)
+
+const (
+	RecordNotFoundToDeleteError = "Record not found to delete"	
+	RecordDeletionError = "Error deleting todo"
 )
 
 func (h *TodoHandler) Delete(c *gin.Context) {
@@ -18,15 +24,20 @@ func (h *TodoHandler) Delete(c *gin.Context) {
 	).Delete().Exec(c)
 
 	if err != nil {
-		logger.Logger.Error(fmt.Sprintf("Error deleting todo: %v\n", err));
+		if errors.Is(err, db.ErrNotFound) {
+			logger.Logger.Error(fmt.Sprintf(RecordNotFoundToDeleteError+": %v\n", err))
 
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error deleting todo"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": RecordNotFoundToDeleteError})
+			return
+		}
+		
+		logger.Logger.Error(fmt.Sprintf(RecordDeletionError + ": %v\n", err));
+
+		c.JSON(http.StatusInternalServerError, gin.H{"error": RecordDeletionError})
 		return
 	}
 
-	todoString := fmt.Sprintf("%+v", todo)
-
-	logger.Logger.Info("Deleted record: " +  todoString);
+	logger.LogWithObject("Deleted record", todo);
 
 	c.Status(http.StatusNoContent)
 }
