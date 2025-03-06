@@ -8,6 +8,7 @@ import (
 
 	"todo/models"
 	"todo/prisma/db"
+	logger "todo/tools"
 )
 
 func (h *TodoHandler) UpdateTodo(c *gin.Context) {
@@ -41,12 +42,14 @@ func (h *TodoHandler) UpdateTodo(c *gin.Context) {
 		updateArgs...,
 	).Exec(c)
 
-	fmt.Println(todo)
-
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
+
+	todoString := fmt.Sprintf("%+v", todo);
+
+	logger.Logger.Info("Updated record: " +  todoString);
 
 	c.JSON(http.StatusOK, todo);
 }

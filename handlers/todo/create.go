@@ -8,6 +8,7 @@ import (
 
 	"todo/models"
 	"todo/prisma/db"
+	logger "todo/tools"
 )
 
 
@@ -25,9 +26,14 @@ func (h *TodoHandler) CreateTodo(c *gin.Context) {
 	).Exec(c)
 
 	if err != nil {
-		fmt.Printf("Error creating todo: %v\n", err)
+		logger.Logger.Error(fmt.Sprintf("Error creating todo: %v\n", err))
+
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating todo"})
 	}
+
+	todoString := fmt.Sprintf("%+v", todo)
+	
+	logger.Logger.Info("Created record: " +  todoString);
 
 	c.JSON(http.StatusCreated, todo)
 }

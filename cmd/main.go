@@ -7,9 +7,12 @@ import (
 
 	"todo/controllers"
 	"todo/prisma/db"
+	logger "todo/tools"
 )
 
 func main() {
+    logger.InitLogger()
+
     router := gin.Default()
 
     prismaClient := db.NewClient();
